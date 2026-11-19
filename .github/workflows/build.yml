@@ -16,18 +16,19 @@ jobs:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Verify source files
+      - name: Extract merged source archive
         run: |
-          test -f gradlew || { echo 'Missing Gradle wrapper: upload merged source archive first'; exit 1; }
-          test -f build.gradle.kts
-          test -f gradle/wrapper/gradle-wrapper.jar
-      - name: Build
-        run: |
-          chmod +x ./gradlew
-          ./gradlew --no-daemon clean build --stacktrace
+          test -f veintreemod-merged-source.zip
+          unzip -oq veintreemod-merged-source.zip -d extracted
+          test -f extracted/build.gradle.kts
+          test -f extracted/gradle/wrapper/gradle-wrapper.jar
+          chmod +x extracted/gradlew
+      - name: Build Fabric mod
+        working-directory: extracted
+        run: ./gradlew --no-daemon clean build --stacktrace
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: veintreemod-build
-          path: build/libs/*.jar
+          name: veintreemod-jar
+          path: extracted/build/libs/*.jar
           if-no-files-found: error
